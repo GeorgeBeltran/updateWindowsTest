@@ -3,7 +3,6 @@
 # Ensure unrestricted script execution
 Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
 
-$registryPath  = "HKLM:\SOFTWARE\MyUpdatePrompt"
 $scriptFolder  = "C:\ProgramData\MyScriptFolder"
 $enableCleanup = $true  # Set to $false to preserve registry/scripts
 
@@ -45,23 +44,6 @@ if ($updates -and $updates.Count -gt 0) {
     Install-WindowsUpdate -AcceptAll -AutoReboot -ErrorAction SilentlyContinue
 } else {
     Log "✅ No updates found. Skipping installation."
-
-    # === Optional Cleanup ===
-    if ($enableCleanup) {
-        try {
-            if (Test-Path $registryPath) {
-                Remove-Item -Path $registryPath -Recurse -Force -ErrorAction SilentlyContinue
-                Log "🧹 Registry key removed: $registryPath"
-            }
-
-            if (Test-Path $scriptFolder) {
-                Remove-Item -Path $scriptFolder -Recurse -Force -ErrorAction SilentlyContinue
-                Log "🧹 Script folder removed: $scriptFolder"
-            }
-        } catch {
-            Log "⚠️ Cleanup failed: $($_.Exception.Message)"
-        }
-    }
 }
 
 Log "✅ Script B completed."

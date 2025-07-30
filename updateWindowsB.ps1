@@ -76,4 +76,3 @@ if ($updates -and $updates.Count -gt 0) {
     Log "✅ No updates found. Skipping installation."
 }
 
-Log "Script B completed successfully."

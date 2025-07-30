@@ -1,52 +1,58 @@
-# === Script B: Run Updates and Restart (SYSTEM) ===
+# === updateWindowsB.ps1 ===
 
-Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+$logPath = "C:\ProgramData\MyScriptFolder\loggingB.txt"
 
-$scriptFolder = "C:\ProgramData\MyScriptFolder"
-$logFile = Join-Path $scriptFolder "updateWindowsB.log"
-$enableCleanup = $true
-
-if (-not (Test-Path $scriptFolder)) {
-    New-Item -ItemType Directory -Path $scriptFolder -Force | Out-Null
+# Ensure log directory exists
+$logDir = [System.IO.Path]::GetDirectoryName($logPath)
+if (-not (Test-Path $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 }
+
+Start-Transcript -Path $logPath -Append | Out-Null
 
 function Log($msg) {
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $entry = "[$timestamp] $msg"
-    Add-Content -Path $logFile -Value $entry
-    Write-Output $entry
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Output "[$ts] $msg"
 }
 
-Log "Starting Script B..."
+Log "🟢 Script B starting..."
 
-if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
-    Log "Installing NuGet provider..."
-    Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction SilentlyContinue
-}
+# Show current user for verification
+Log "Running as: $([Environment]::UserName)"
 
-if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
-    Log "Installing PSWindowsUpdate module..."
-    try {
+# Install PSWindowsUpdate if needed
+try {
+    if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
+        Log "Installing PSWindowsUpdate..."
+        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop
         Install-Module -Name PSWindowsUpdate -Force -AllowClobber -Scope AllUsers -ErrorAction Stop
-        Log "PSWindowsUpdate module installed."
-    } catch {
-        Log "Failed to install PSWindowsUpdate: $($_.Exception.Message)"
-        exit 1
+        Log "✅ PSWindowsUpdate installed."
+    } else {
+        Log "✔️ PSWindowsUpdate already available."
     }
-} else {
-    Log "PSWindowsUpdate module already installed."
+
+    Import-Module PSWindowsUpdate -Force
+    Log "📥 Module imported successfully."
+} catch {
+    Log "❌ Failed to install or import PSWindowsUpdate: $_"
+    Stop-Transcript
+    exit 1
 }
 
-Import-Module PSWindowsUpdate -Force -ErrorAction Stop
+# Check for and install updates
+try {
+    Log "🔍 Checking for available Windows Updates..."
+    $updates = Get-WindowsUpdate -AcceptAll -IgnoreReboot
 
-Log "Checking for available Windows Updates..."
-$updates = Get-WindowsUpdate -AcceptAll -IgnoreReboot -ErrorAction SilentlyContinue
-
-if ($updates -and $updates.Count -gt 0) {
-    Log "Installing updates..."
-    Install-WindowsUpdate -AcceptAll -AutoReboot -ErrorAction SilentlyContinue
-} else {
-    Log "No updates found. Skipping installation."
+    if ($updates.Count -gt 0) {
+        Log "🚀 Installing updates..."
+        Install-WindowsUpdate -AcceptAll -AutoReboot -ErrorAction Stop
+    } else {
+        Log "✅ No updates found."
+    }
+} catch {
+    Log "❌ Update process failed: $_"
 }
 
-Log "Script B completed."
+Log "✅ Script B complete."
+Stop-Transcript

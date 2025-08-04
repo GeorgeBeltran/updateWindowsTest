@@ -41,7 +41,7 @@ if ($updates.Count -eq 0) {
 }
 
 Log "Installing updates..."
-Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -AutoReboot | Out-Null
+Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot | Out-Null
 
 Log "Updates installed. Reboot will occur if required."
 Log "Script B completed."

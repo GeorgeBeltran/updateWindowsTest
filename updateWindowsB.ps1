@@ -1,3 +1,7 @@
+param (
+    [string]$folderPath = "C:\ProgramData\MyScriptFolder"
+)
+
 # Create hidden folder if needed
 if (-not (Test-Path $folderPath)) {
     New-Item -Path $folderPath -ItemType Directory -Force | Out-Null

@@ -1,3 +1,10 @@
+# Create hidden folder if needed
+if (-not (Test-Path $folderPath)) {
+    New-Item -Path $folderPath -ItemType Directory -Force | Out-Null
+    attrib +s +h $folderPath
+}
+$scriptPath = Join-Path $folderPath $scriptName
+
 # updateWindowsB.ps1 — Installs updates and reboots if needed
 $logPath = "C:\ProgramData\MyScriptFolder\updateWindowsB_log.txt"
 

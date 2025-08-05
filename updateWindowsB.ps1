@@ -41,17 +41,25 @@ if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
 }
 
 Import-Module PSWindowsUpdate -Force
-Log "Checking for available Windows Updates..."
+log "Checking for updates..."
+$updates = Get-WindowsUpdate -MicrosoftUpdate -AcceptAll
 
-# Get available updates
-$updates = Get-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
 if ($updates.Count -eq 0) {
-    Log "No updates found. Skipping installation."
-    exit 0
+    log "No updates available."
+} else {
+    log "Updates found:"
+    foreach ($update in $updates) {
+        log " - $($update.Title)"
+    }
+
+    log "Installing updates..."
+    try {
+        Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -Verbose -ErrorAction Stop | Out-Null
+        log "Update installation complete. Reboot may be required."
+    } catch {
+        log "Error during update installation: $($_.Exception.Message)"
+        exit 1
+    }
 }
 
-Log "Installing updates..."
-Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot | Out-Null
-
-Log "Updates installed. Reboot will occur if required."
-Log "Script B completed."
+log "Script B completed."
